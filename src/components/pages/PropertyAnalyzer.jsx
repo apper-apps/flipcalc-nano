@@ -52,52 +52,26 @@ const [hardMoneyLenders, setHardMoneyLenders] = useState([
   ]);
 
 const [selectedLender, setSelectedLender] = useState(0);
-  const [analysis, setAnalysis] = useState({
-    totalInvestment: 0,
-    holdingCosts: 0,
-    netProfit: 0,
-    roi: 0,
-    cashOnCash: 0,
-    monthlyCarryCost: 0
+const [analysis, setAnalysis] = useState({
+    seventyPercentRule: {
+      maxOfferPrice: 0,
+      meetsRule: false,
+      difference: 0
+    }
   });
 
 const calculateAnalysis = () => {
-    const lenderTerms = hardMoneyLenders[selectedLender];
-    
-    const loanAmount = Math.min(
-      (property.purchasePrice + property.repairCosts) * (lenderTerms.loanToValue / 100),
-      property.purchasePrice + property.repairCosts
-    );
-
-    const downPayment = (property.purchasePrice + property.repairCosts) - loanAmount;
-    const pointsCost = loanAmount * (lenderTerms.points / 100);
-    const underwritingFees = lenderTerms.underwritingFees || 0;
-    const monthlyRate = lenderTerms.interestRate / 100 / 12;
-    const monthlyPayment = loanAmount * monthlyRate;
-    
-    // Holding costs (utilities, insurance, taxes, maintenance)
-    const monthlyHoldingCosts = property.purchasePrice * 0.01 / 12; // 1% annually
-    const totalHoldingCosts = monthlyHoldingCosts * (property.holdingPeriod || 6);
-    
-    // Interest payments during holding period
-    const totalInterest = monthlyPayment * (property.holdingPeriod || 6);
-    
-    // Selling costs (realtor fees, closing costs, etc.)
-    const sellingCosts = property.arv * 0.08; // 8% of ARV
-    
-    const totalInvestment = downPayment + pointsCost + underwritingFees + property.repairCosts;
-    const totalCosts = property.purchasePrice + property.repairCosts + pointsCost + underwritingFees + totalInterest + totalHoldingCosts + sellingCosts;
-    const netProfit = property.arv - totalCosts;
-    const roi = totalInvestment > 0 ? (netProfit / totalInvestment) * 100 : 0;
-    const monthlyCarryCost = monthlyPayment + monthlyHoldingCosts;
+    // 70% Rule: ARV x 0.70 - Estimated repair costs
+    const maxOfferPrice = (property.arv * 0.70) - property.repairCosts;
+    const meetsRule = property.purchasePrice <= maxOfferPrice;
+    const difference = maxOfferPrice - property.purchasePrice;
 
     setAnalysis({
-      totalInvestment,
-      holdingCosts: totalHoldingCosts,
-      netProfit,
-      roi,
-      cashOnCash: roi, // Simplified for this example
-      monthlyCarryCost
+      seventyPercentRule: {
+        maxOfferPrice,
+        meetsRule,
+        difference
+      }
     });
   };
 

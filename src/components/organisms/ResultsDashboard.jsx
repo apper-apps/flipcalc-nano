@@ -29,14 +29,12 @@ const ResultsDashboard = ({ analysis, property }) => {
     return `${(percentage || 0).toFixed(1)}%`;
   };
 
-  const getRuleStatus = () => {
-    const seventyPercentRule = (property.purchasePrice + property.repairCosts) / property.arv;
-    if (seventyPercentRule <= 0.7) {
-      return { status: "excellent", color: "success", text: "Meets 70% Rule" };
-    } else if (seventyPercentRule <= 0.8) {
-      return { status: "good", color: "warning", text: "Above 70% Rule" };
+const getRuleStatus = () => {
+    const maxOfferPrice = (property.arv * 0.70) - property.repairCosts;
+    if (property.purchasePrice <= maxOfferPrice) {
+      return { status: "good", color: "success", text: "Good to Go" };
     } else {
-      return { status: "risky", color: "error", text: "High Risk Deal" };
+      return { status: "bad", color: "error", text: "No Go" };
     }
   };
 
@@ -55,42 +53,27 @@ const ResultsDashboard = ({ analysis, property }) => {
               <p className="text-sm text-gray-600">Real-time profitability metrics</p>
             </div>
           </div>
-          <div className={`px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${
+<div className={`px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${
             rule.color === "success" ? "from-success/20 to-green-600/20 text-success" :
-            rule.color === "warning" ? "from-warning/20 to-orange-600/20 text-warning" :
             "from-error/20 to-red-600/20 text-error"
           }`}>
             {rule.text}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <MetricCard
-            title="Net Profit"
-            value={formatCurrency(analysis.netProfit)}
-            icon="DollarSign"
-            color={analysis.netProfit > 0 ? "success" : "error"}
-          />
-          
-          <MetricCard
-            title="ROI"
-            value={formatPercentage(analysis.roi)}
-            icon="TrendingUp"
-            color={analysis.roi > 15 ? "success" : analysis.roi > 10 ? "warning" : "error"}
-          />
-          
-          <MetricCard
-            title="Total Investment"
-            value={formatCurrency(analysis.totalInvestment)}
-            icon="Wallet"
+            title="Max Offer Price"
+            value={formatCurrency((property.arv * 0.70) - property.repairCosts)}
+            icon="Calculator"
             color="primary"
           />
           
           <MetricCard
-            title="Monthly Carry"
-            value={formatCurrency(analysis.monthlyCarryCost)}
-            icon="Calendar"
-            color="warning"
+            title="Your Offer"
+            value={formatCurrency(property.purchasePrice)}
+            icon="DollarSign"
+            color={property.purchasePrice <= ((property.arv * 0.70) - property.repairCosts) ? "success" : "error"}
           />
         </div>
 
@@ -115,13 +98,13 @@ const ResultsDashboard = ({ analysis, property }) => {
             </p>
           </div>
           
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4">
+<div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-600">Profit Margin</span>
-              <ApperIcon name="Percent" size={16} className="text-gray-400" />
+              <span className="text-sm font-medium text-gray-600">70% Rule Compliance</span>
+              <ApperIcon name="Shield" size={16} className="text-gray-400" />
             </div>
             <p className="text-lg font-bold text-gray-900 mt-1">
-              {formatPercentage((analysis.netProfit / property.arv) * 100)}
+              {property.purchasePrice <= ((property.arv * 0.70) - property.repairCosts) ? "✓ Compliant" : "✗ Non-Compliant"}
             </p>
           </div>
         </div>
