@@ -5,85 +5,55 @@ import LenderCard from "@/components/molecules/LenderCard";
 import ApperIcon from "@/components/ApperIcon";
 
 const FinancingOptions = ({ 
-  hardMoneyTerms, 
-  privateMoneyTerms, 
+  hardMoneyLenders, 
   onHardMoneyChange, 
-  onPrivateMoneyChange,
   selectedLender,
   onLenderSelect,
   property
 }) => {
-  const calculateHardMoneyMetrics = () => {
+const calculateLenderMetrics = (lenderTerms) => {
     const loanAmount = Math.min(
-      (property.purchasePrice + property.repairCosts) * (hardMoneyTerms.loanToValue / 100),
+      (property.purchasePrice + property.repairCosts) * (lenderTerms.loanToValue / 100),
       property.purchasePrice + property.repairCosts
     );
     
-    const monthlyRate = hardMoneyTerms.interestRate / 100 / 12;
+    const monthlyRate = lenderTerms.interestRate / 100 / 12;
     const monthlyPayment = loanAmount * monthlyRate;
-    const pointsCost = loanAmount * (hardMoneyTerms.points / 100);
+    const pointsCost = loanAmount * (lenderTerms.points / 100);
+    const underwritingFees = lenderTerms.underwritingFees || 0;
     const totalInterest = monthlyPayment * (property.holdingPeriod || 6);
-    const totalCost = pointsCost + totalInterest;
+    const totalCost = pointsCost + totalInterest + underwritingFees;
 
     return {
       loanAmount,
       monthlyPayment,
       totalCost,
-      pointsCost
+      pointsCost,
+      underwritingFees
     };
   };
 
-  const calculatePrivateMoneyMetrics = () => {
-    const loanAmount = privateMoneyTerms.loanAmount || 0;
-    const monthlyRate = privateMoneyTerms.interestRate / 100 / 12;
-    const monthlyPayment = loanAmount * monthlyRate;
-    const pointsCost = loanAmount * (privateMoneyTerms.points / 100);
-    const totalInterest = monthlyPayment * (property.holdingPeriod || 6);
-    const totalCost = pointsCost + totalInterest;
+  const lenderMetrics = hardMoneyLenders.map(lender => calculateLenderMetrics(lender));
 
-    return {
-      loanAmount,
-      monthlyPayment,
-      totalCost,
-      pointsCost
-    };
-  };
-
-  const hardMoneyMetrics = calculateHardMoneyMetrics();
-  const privateMoneyMetrics = calculatePrivateMoneyMetrics();
-
-  const handleHardMoneyChange = (field, value) => {
-    const updatedTerms = {
-      ...hardMoneyTerms,
+const handleLenderChange = (lenderIndex, field, value) => {
+    const updatedLenders = [...hardMoneyLenders];
+    updatedLenders[lenderIndex] = {
+      ...updatedLenders[lenderIndex],
       [field]: value
     };
 
     if (field === "loanToValue" || field === "interestRate" || field === "points") {
       const loanAmount = Math.min(
-        (property.purchasePrice + property.repairCosts) * (updatedTerms.loanToValue / 100),
+        (property.purchasePrice + property.repairCosts) * (updatedLenders[lenderIndex].loanToValue / 100),
         property.purchasePrice + property.repairCosts
       );
-      updatedTerms.loanAmount = loanAmount;
+      updatedLenders[lenderIndex].loanAmount = loanAmount;
       
-      const monthlyRate = updatedTerms.interestRate / 100 / 12;
-      updatedTerms.monthlyPayment = loanAmount * monthlyRate;
+      const monthlyRate = updatedLenders[lenderIndex].interestRate / 100 / 12;
+      updatedLenders[lenderIndex].monthlyPayment = loanAmount * monthlyRate;
     }
 
-    onHardMoneyChange(updatedTerms);
-  };
-
-  const handlePrivateMoneyChange = (field, value) => {
-    const updatedTerms = {
-      ...privateMoneyTerms,
-      [field]: value
-    };
-
-    if (field === "loanAmount" || field === "interestRate") {
-      const monthlyRate = updatedTerms.interestRate / 100 / 12;
-      updatedTerms.monthlyPayment = updatedTerms.loanAmount * monthlyRate;
-    }
-
-    onPrivateMoneyChange(updatedTerms);
+    onHardMoneyChange(updatedLenders);
   };
 
   return (
@@ -99,136 +69,101 @@ const FinancingOptions = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Hard Money Lender */}
-          <div className="space-y-4">
-            <h3 className="font-display font-semibold text-lg text-gray-900 flex items-center">
-              <ApperIcon name="Zap" size={20} className="text-warning mr-2" />
-              Hard Money Lender
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                label="LTV Ratio"
-                type="number"
-                value={hardMoneyTerms.loanToValue || ""}
-                onChange={(e) => handleHardMoneyChange("loanToValue", parseFloat(e.target.value) || 0)}
-                suffix="%"
-                placeholder="70"
-              />
-              
-              <FormField
-                label="Interest Rate"
-                type="number"
-                step="0.1"
-                value={hardMoneyTerms.interestRate || ""}
-                onChange={(e) => handleHardMoneyChange("interestRate", parseFloat(e.target.value) || 0)}
-                suffix="% APR"
-                placeholder="12.0"
-              />
-              
-              <FormField
-                label="Points"
-                type="number"
-                step="0.1"
-                value={hardMoneyTerms.points || ""}
-                onChange={(e) => handleHardMoneyChange("points", parseFloat(e.target.value) || 0)}
-                suffix="%"
-                placeholder="2.0"
-              />
-              
-              <FormField
-                label="Term"
-                type="number"
-                value={hardMoneyTerms.term || ""}
-                onChange={(e) => handleHardMoneyChange("term", parseInt(e.target.value) || 0)}
-                suffix="months"
-                placeholder="12"
-              />
-            </div>
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {hardMoneyLenders.map((lender, index) => {
+            const metrics = lenderMetrics[index];
+            return (
+              <div key={index} className="space-y-4">
+                <h3 className="font-display font-semibold text-lg text-gray-900 flex items-center">
+                  <ApperIcon name="Zap" size={20} className="text-warning mr-2" />
+                  Hard Money Lender {index + 1}
+                </h3>
+                
+                <FormField
+                  label="Lender Name"
+                  type="text"
+                  value={lender.name || ""}
+                  onChange={(e) => handleLenderChange(index, "name", e.target.value)}
+                  placeholder={`Lender ${index + 1}`}
+                />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    label="LTV Ratio"
+                    type="number"
+                    value={lender.loanToValue || ""}
+                    onChange={(e) => handleLenderChange(index, "loanToValue", parseFloat(e.target.value) || 0)}
+                    suffix="%"
+                    placeholder="70"
+                  />
+                  
+                  <FormField
+                    label="Interest Rate"
+                    type="number"
+                    step="0.1"
+                    value={lender.interestRate || ""}
+                    onChange={(e) => handleLenderChange(index, "interestRate", parseFloat(e.target.value) || 0)}
+                    suffix="% APR"
+                    placeholder="12.0"
+                  />
+                  
+                  <FormField
+                    label="Points"
+                    type="number"
+                    step="0.1"
+                    value={lender.points || ""}
+                    onChange={(e) => handleLenderChange(index, "points", parseFloat(e.target.value) || 0)}
+                    suffix="%"
+                    placeholder="2.0"
+                  />
+                  
+                  <FormField
+                    label="Term"
+                    type="number"
+                    value={lender.term || ""}
+                    onChange={(e) => handleLenderChange(index, "term", parseInt(e.target.value) || 0)}
+                    suffix="months"
+                    placeholder="12"
+                  />
+                  
+                  <FormField
+                    label="Underwriting Fees"
+                    type="number"
+                    value={lender.underwritingFees || ""}
+                    onChange={(e) => handleLenderChange(index, "underwritingFees", parseFloat(e.target.value) || 0)}
+                    prefix="$"
+                    placeholder="1500"
+                    className="col-span-2"
+                  />
+                </div>
 
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Loan Amount</span>
-                  <span className="font-medium">${hardMoneyMetrics.loanAmount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Points Cost</span>
-                  <span className="font-medium">${hardMoneyMetrics.pointsCost.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Monthly Payment</span>
-                  <span className="font-medium">${hardMoneyMetrics.monthlyPayment.toLocaleString()}</span>
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Loan Amount</span>
+                      <span className="font-medium">${metrics.loanAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Points Cost</span>
+                      <span className="font-medium">${metrics.pointsCost.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Underwriting Fees</span>
+                      <span className="font-medium">${metrics.underwritingFees.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Monthly Payment</span>
+                      <span className="font-medium">${metrics.monthlyPayment.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-gray-200">
+                      <span className="text-gray-900 font-semibold">Total Cost</span>
+                      <span className="font-bold text-primary">${metrics.totalCost.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Private Money Lender */}
-          <div className="space-y-4">
-            <h3 className="font-display font-semibold text-lg text-gray-900 flex items-center">
-              <ApperIcon name="Users" size={20} className="text-info mr-2" />
-              Private Money Lender
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                label="Loan Amount"
-                type="number"
-                value={privateMoneyTerms.loanAmount || ""}
-                onChange={(e) => handlePrivateMoneyChange("loanAmount", parseFloat(e.target.value) || 0)}
-                prefix="$"
-                placeholder="0"
-              />
-              
-              <FormField
-                label="Interest Rate"
-                type="number"
-                step="0.1"
-                value={privateMoneyTerms.interestRate || ""}
-                onChange={(e) => handlePrivateMoneyChange("interestRate", parseFloat(e.target.value) || 0)}
-                suffix="% APR"
-                placeholder="8.0"
-              />
-              
-              <FormField
-                label="Points"
-                type="number"
-                step="0.1"
-                value={privateMoneyTerms.points || ""}
-                onChange={(e) => handlePrivateMoneyChange("points", parseFloat(e.target.value) || 0)}
-                suffix="%"
-                placeholder="1.0"
-              />
-              
-              <FormField
-                label="Term"
-                type="number"
-                value={privateMoneyTerms.term || ""}
-                onChange={(e) => handlePrivateMoneyChange("term", parseInt(e.target.value) || 0)}
-                suffix="months"
-                placeholder="24"
-              />
-            </div>
-
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Loan Amount</span>
-                  <span className="font-medium">${privateMoneyMetrics.loanAmount.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Points Cost</span>
-                  <span className="font-medium">${privateMoneyMetrics.pointsCost.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Monthly Payment</span>
-                  <span className="font-medium">${privateMoneyMetrics.monthlyPayment.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </Card>
 
@@ -244,29 +179,25 @@ const FinancingOptions = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <LenderCard
-            title="Hard Money Option"
-            type="hard"
-            terms={{
-              ...hardMoneyTerms,
-              loanAmount: hardMoneyMetrics.loanAmount
-            }}
-            totalCost={hardMoneyMetrics.totalCost}
-            monthlyPayment={hardMoneyMetrics.monthlyPayment}
-            isSelected={selectedLender === "hard"}
-            onSelect={() => onLenderSelect("hard")}
-          />
-          
-          <LenderCard
-            title="Private Money Option"
-            type="private"
-            terms={privateMoneyTerms}
-            totalCost={privateMoneyMetrics.totalCost}
-            monthlyPayment={privateMoneyMetrics.monthlyPayment}
-            isSelected={selectedLender === "private"}
-            onSelect={() => onLenderSelect("private")}
-          />
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {hardMoneyLenders.map((lender, index) => {
+            const metrics = lenderMetrics[index];
+            return (
+              <LenderCard
+                key={index}
+                title={lender.name || `Hard Money Lender ${index + 1}`}
+                type="hard"
+                terms={{
+                  ...lender,
+                  loanAmount: metrics.loanAmount
+                }}
+                totalCost={metrics.totalCost}
+                monthlyPayment={metrics.monthlyPayment}
+                isSelected={selectedLender === index}
+                onSelect={() => onLenderSelect(index)}
+              />
+            );
+          })}
         </div>
 
         <div className="mt-6 p-4 bg-gradient-to-r from-success/10 to-green-600/20 rounded-lg">

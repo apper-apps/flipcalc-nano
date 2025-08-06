@@ -18,25 +18,40 @@ const PropertyAnalyzer = () => {
     holdingPeriod: 6
   });
 
-  const [hardMoneyTerms, setHardMoneyTerms] = useState({
-    loanToValue: 70,
-    interestRate: 12,
-    points: 2,
-    term: 12,
-    loanAmount: 0,
-    monthlyPayment: 0
-  });
+const [hardMoneyLenders, setHardMoneyLenders] = useState([
+    {
+      name: "Lender 1",
+      loanToValue: 70,
+      interestRate: 12,
+      points: 2,
+      term: 12,
+      underwritingFees: 1500,
+      loanAmount: 0,
+      monthlyPayment: 0
+    },
+    {
+      name: "Lender 2", 
+      loanToValue: 75,
+      interestRate: 11,
+      points: 2.5,
+      term: 12,
+      underwritingFees: 2000,
+      loanAmount: 0,
+      monthlyPayment: 0
+    },
+    {
+      name: "Lender 3",
+      loanToValue: 65,
+      interestRate: 13,
+      points: 1.5,
+      term: 12,
+      underwritingFees: 1200,
+      loanAmount: 0,
+      monthlyPayment: 0
+    }
+  ]);
 
-  const [privateMoneyTerms, setPrivateMoneyTerms] = useState({
-    loanAmount: 0,
-    interestRate: 8,
-    term: 24,
-    paymentType: "interest-only",
-    points: 1,
-    monthlyPayment: 0
-  });
-
-  const [selectedLender, setSelectedLender] = useState("hard");
+const [selectedLender, setSelectedLender] = useState(0);
   const [analysis, setAnalysis] = useState({
     totalInvestment: 0,
     holdingCosts: 0,
@@ -46,19 +61,17 @@ const PropertyAnalyzer = () => {
     monthlyCarryCost: 0
   });
 
-  const calculateAnalysis = () => {
-    const isHardMoney = selectedLender === "hard";
-    const lenderTerms = isHardMoney ? hardMoneyTerms : privateMoneyTerms;
+const calculateAnalysis = () => {
+    const lenderTerms = hardMoneyLenders[selectedLender];
     
-    const loanAmount = isHardMoney 
-      ? Math.min(
-          (property.purchasePrice + property.repairCosts) * (hardMoneyTerms.loanToValue / 100),
-          property.purchasePrice + property.repairCosts
-        )
-      : privateMoneyTerms.loanAmount;
+    const loanAmount = Math.min(
+      (property.purchasePrice + property.repairCosts) * (lenderTerms.loanToValue / 100),
+      property.purchasePrice + property.repairCosts
+    );
 
     const downPayment = (property.purchasePrice + property.repairCosts) - loanAmount;
     const pointsCost = loanAmount * (lenderTerms.points / 100);
+    const underwritingFees = lenderTerms.underwritingFees || 0;
     const monthlyRate = lenderTerms.interestRate / 100 / 12;
     const monthlyPayment = loanAmount * monthlyRate;
     
@@ -72,8 +85,8 @@ const PropertyAnalyzer = () => {
     // Selling costs (realtor fees, closing costs, etc.)
     const sellingCosts = property.arv * 0.08; // 8% of ARV
     
-    const totalInvestment = downPayment + pointsCost + property.repairCosts;
-    const totalCosts = property.purchasePrice + property.repairCosts + pointsCost + totalInterest + totalHoldingCosts + sellingCosts;
+    const totalInvestment = downPayment + pointsCost + underwritingFees + property.repairCosts;
+    const totalCosts = property.purchasePrice + property.repairCosts + pointsCost + underwritingFees + totalInterest + totalHoldingCosts + sellingCosts;
     const netProfit = property.arv - totalCosts;
     const roi = totalInvestment > 0 ? (netProfit / totalInvestment) * 100 : 0;
     const monthlyCarryCost = monthlyPayment + monthlyHoldingCosts;
@@ -92,7 +105,7 @@ const PropertyAnalyzer = () => {
     if (property.purchasePrice > 0 && property.arv > 0) {
       calculateAnalysis();
     }
-  }, [property, hardMoneyTerms, privateMoneyTerms, selectedLender]);
+  }, [property, hardMoneyLenders, selectedLender]);
 
   const handleClearData = () => {
     setProperty({
@@ -106,32 +119,48 @@ const PropertyAnalyzer = () => {
       holdingPeriod: 6
     });
     
-    setHardMoneyTerms({
-      loanToValue: 70,
-      interestRate: 12,
-      points: 2,
-      term: 12,
-      loanAmount: 0,
-      monthlyPayment: 0
-    });
+setHardMoneyLenders([
+      {
+        name: "Lender 1",
+        loanToValue: 70,
+        interestRate: 12,
+        points: 2,
+        term: 12,
+        underwritingFees: 1500,
+        loanAmount: 0,
+        monthlyPayment: 0
+      },
+      {
+        name: "Lender 2",
+        loanToValue: 75,
+        interestRate: 11,
+        points: 2.5,
+        term: 12,
+        underwritingFees: 2000,
+        loanAmount: 0,
+        monthlyPayment: 0
+      },
+      {
+        name: "Lender 3",
+        loanToValue: 65,
+        interestRate: 13,
+        points: 1.5,
+        term: 12,
+        underwritingFees: 1200,
+        loanAmount: 0,
+        monthlyPayment: 0
+      }
+    ]);
     
-    setPrivateMoneyTerms({
-      loanAmount: 0,
-      interestRate: 8,
-      term: 24,
-      paymentType: "interest-only",
-      points: 1,
-      monthlyPayment: 0
-    });
+    setSelectedLender(0);
 
     toast.success("Analysis cleared successfully");
   };
 
   const handleSaveAnalysis = () => {
-    const analysisData = {
+const analysisData = {
       property,
-      hardMoneyTerms,
-      privateMoneyTerms,
+      hardMoneyLenders,
       selectedLender,
       analysis,
       savedAt: new Date().toISOString()
@@ -192,11 +221,9 @@ const PropertyAnalyzer = () => {
         </div>
 
         {/* Financing Options */}
-        <FinancingOptions 
-          hardMoneyTerms={hardMoneyTerms}
-          privateMoneyTerms={privateMoneyTerms}
-          onHardMoneyChange={setHardMoneyTerms}
-          onPrivateMoneyChange={setPrivateMoneyTerms}
+<FinancingOptions 
+          hardMoneyLenders={hardMoneyLenders}
+          onHardMoneyChange={setHardMoneyLenders}
           selectedLender={selectedLender}
           onLenderSelect={setSelectedLender}
           property={property}
