@@ -106,9 +106,73 @@ const getRuleStatus = () => {
             <p className="text-lg font-bold text-gray-900 mt-1">
               {property.purchasePrice <= ((property.arv * 0.70) - property.repairCosts) ? "✓ Compliant" : "✗ Non-Compliant"}
             </p>
-          </div>
+</div>
         </div>
       </Card>
+
+      {analysis && analysis.selectedLender && (
+        <Card className="p-6">
+          <div className="flex items-center mb-6">
+            <div className="bg-gradient-to-br from-warning/10 to-orange-600/20 p-3 rounded-lg mr-4">
+              <ApperIcon name="CreditCard" size={24} className="text-warning" />
+            </div>
+            <div>
+              <h2 className="text-xl font-display font-semibold text-gray-900">Financing Costs</h2>
+              <p className="text-sm text-gray-600">Total cost over {property.holdingPeriod || 6} months</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <MetricCard
+              title="Monthly Payment"
+              value={formatCurrency(analysis.selectedLender.monthlyPayment)}
+              icon="Calendar"
+              color="warning"
+              subtitle={`For ${property.holdingPeriod || 6} months`}
+            />
+            
+            <MetricCard
+              title="Total Loan Cost"
+              value={formatCurrency(analysis.selectedLender.totalCost)}
+              icon="DollarSign"
+              color="error"
+              subtitle="Points + Monthly Payments + Fees"
+            />
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600">Points Cost</span>
+                <ApperIcon name="Percent" size={16} className="text-gray-400" />
+              </div>
+              <p className="text-lg font-bold text-gray-900 mt-1">
+                {formatCurrency(analysis.selectedLender.pointsCost)}
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600">Total Monthly Payments</span>
+                <ApperIcon name="Calculator" size={16} className="text-gray-400" />
+              </div>
+              <p className="text-lg font-bold text-gray-900 mt-1">
+                {formatCurrency(analysis.selectedLender.totalMonthlyPayments)}
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-600">Underwriting Fees</span>
+                <ApperIcon name="FileText" size={16} className="text-gray-400" />
+              </div>
+              <p className="text-lg font-bold text-gray-900 mt-1">
+                {formatCurrency(analysis.selectedLender.underwritingFees)}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

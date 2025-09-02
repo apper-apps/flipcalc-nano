@@ -53,10 +53,13 @@ const LenderCard = ({
         <div className="flex justify-between">
           <span className="font-medium text-gray-700">Monthly Payment</span>
           <span className="font-bold text-lg">${monthlyPayment?.toLocaleString()}</span>
-        </div>
+</div>
         <div className="flex justify-between">
-          <span className="font-medium text-gray-700">Total Cost</span>
+          <span className="font-medium text-gray-700">Total Loan Cost</span>
           <span className="font-bold text-lg text-primary">${totalCost?.toLocaleString()}</span>
+        </div>
+        <div className="text-xs text-gray-500 text-right mt-1">
+          Over {terms.holdingMonths || 6} months
         </div>
       </div>
 

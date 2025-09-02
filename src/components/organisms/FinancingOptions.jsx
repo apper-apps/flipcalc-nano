@@ -21,15 +21,18 @@ const calculateLenderMetrics = (lenderTerms) => {
     const monthlyPayment = loanAmount * monthlyRate;
     const pointsCost = loanAmount * (lenderTerms.points / 100);
     const underwritingFees = lenderTerms.underwritingFees || 0;
-    const totalInterest = monthlyPayment * (property.holdingPeriod || 6);
-    const totalCost = pointsCost + totalInterest + underwritingFees;
+    const holdingMonths = property.holdingPeriod || 6;
+    const totalMonthlyPayments = monthlyPayment * holdingMonths;
+    const totalCost = pointsCost + totalMonthlyPayments + underwritingFees;
 
     return {
       loanAmount,
       monthlyPayment,
       totalCost,
       pointsCost,
-      underwritingFees
+      underwritingFees,
+      totalMonthlyPayments,
+      holdingMonths
     };
   };
 
