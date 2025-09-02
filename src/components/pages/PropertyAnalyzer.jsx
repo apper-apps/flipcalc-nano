@@ -187,9 +187,21 @@ const analysisData = {
             onPropertyChange={setProperty}
           />
 
-          {/* Results Dashboard */}
+{/* Results Dashboard */}
           <ResultsDashboard 
-            analysis={analysis}
+            analysis={{
+              ...analysis,
+              selectedLender: hardMoneyLenders[selectedLender] ? {
+                ...hardMoneyLenders[selectedLender],
+                monthlyPayment: hardMoneyLenders[selectedLender].monthlyPayment || 0,
+                totalMonthlyPayments: (hardMoneyLenders[selectedLender].monthlyPayment || 0) * (property.holdingPeriod || 6),
+                totalCost: (hardMoneyLenders[selectedLender].loanAmount || 0) * (hardMoneyLenders[selectedLender].points || 0) / 100 + 
+                          ((hardMoneyLenders[selectedLender].monthlyPayment || 0) * (property.holdingPeriod || 6)) + 
+                          (hardMoneyLenders[selectedLender].underwritingFees || 0),
+                pointsCost: (hardMoneyLenders[selectedLender].loanAmount || 0) * (hardMoneyLenders[selectedLender].points || 0) / 100,
+                underwritingFees: hardMoneyLenders[selectedLender].underwritingFees || 0
+              } : null
+            }}
             property={property}
           />
         </div>

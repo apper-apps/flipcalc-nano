@@ -151,13 +151,16 @@ const getRuleStatus = () => {
               </p>
             </div>
             
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4">
+<div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-600">Total Monthly Payments</span>
                 <ApperIcon name="Calculator" size={16} className="text-gray-400" />
               </div>
               <p className="text-lg font-bold text-gray-900 mt-1">
                 {formatCurrency(analysis.selectedLender.totalMonthlyPayments)}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {property.holdingPeriod || 6} months × {formatCurrency(analysis.selectedLender.monthlyPayment)} = {formatCurrency(analysis.selectedLender.totalMonthlyPayments)}
               </p>
             </div>
             
